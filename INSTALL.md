@@ -6,7 +6,7 @@ User intent: install this skill, then guide a nontechnical user to a Cloud.ru sa
 2. Detect the current agent's documented skill mechanism and supported MCP transport. Do not assume Codex paths for Claude Code or Hermes. If the agent cannot load SKILL.md or connect to remote MCP with a bearer secret, explain the specific capability gap. Never invent a supported client configuration.
 3. Use the agent's own installer if available. Otherwise, the agent may run `python3 scripts/install_skill.py --skill-dir <agent's exact skill directory> --runtime-dir <agent-managed package directory>`. Python stdlib only; no pip, server or cloud calls. The user should not have to type commands or select technical paths. Existing installations are not overwritten automatically.
 4. The installer writes `installation.json` next to SKILL.md to locate runtime files independently of this repository's path. For a native skill installer, preserve supporting references and place this marker after locating/copying the runtime package. Installing just a raw SKILL.md URL is insufficient: fetch the whole pinned skill folder and package.
-5. Continue immediately with the short first message in `references/onboarding.md`. Do not finish with only “skill installed”. No secret collection in chat.
+5. Continue immediately with the short first message in `references/onboarding.md`. Do not finish with only “skill installed”. Use references/first-time-cloud.md for screen-by-screen guidance and references/access-roles.md before assigning roles. Do not compress setup into “create an account and assign required roles”. No secret collection in chat.
 
 Two runtime delivery modes:
 

@@ -6,6 +6,7 @@
 |---|---|
 | Установить по ссылке и начать | [01-install.md](01-install.md) |
 | Пройти облачный тест, аккаунт уже есть | [02-cloud-test.md](02-cloud-test.md) |
+| Разобраться с аккаунтом, проектом и ролями по одному шагу | [09-help-me-connect.md](09-help-me-connect.md) |
 | Начать без аккаунта Cloud.ru | [03-new-customer.md](03-new-customer.md) |
 | Построить отчёт по своим данным | [04-my-report.md](04-my-report.md) |
 | Обновлять регулярно | [05-recurring.md](05-recurring.md) |
