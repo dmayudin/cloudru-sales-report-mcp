@@ -1,0 +1,25 @@
+[Unit]
+Description=Cloud.ru API-only sales MCP
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=cloudru-sales
+Group=cloudru-sales
+WorkingDirectory=/opt/cloudru-sales-mcp
+EnvironmentFile=/etc/cloudru-sales/runtime.env
+EnvironmentFile=/etc/cloudru-sales/secrets.env
+EnvironmentFile=-/var/lib/cloudru-sales/bound.env
+ExecStart=/opt/cloudru-sales-mcp/.venv/bin/python -m cloudru_mcp.server
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/cloudru-sales
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

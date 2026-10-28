@@ -1,0 +1,4 @@
+line_id,date,sku,product,category,channel,qty,net_revenue,net_cogs,fees,currency
+sale-001,2026-10-01,SKU-001,Чайник,Техника,Магазин,1,1000,600,150,RUB
+return-001,2026-10-02,SKU-001,Чайник,Техника,Магазин,-0.20,-200,-120,0,RUB
+sale-002,2026-10-02,SKU-002,Кружка,Посуда,Маркетплейс,2,500,300,50,RUB

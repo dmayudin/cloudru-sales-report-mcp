@@ -1,0 +1,104 @@
+{
+  "verified_at": "2026-10-28T00:00:00+03:00",
+  "items": [
+    {
+      "category": "clickhouse",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "bi",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "mcp_compute",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "mcp_disk",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "network",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "dns",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "storage",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "logs",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "tls_domain",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "source_connector",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    },
+    {
+      "category": "agent_usage",
+      "unit": "month",
+      "quantity": null,
+      "rate_rub": null,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/index.html",
+      "assumption": "Fill from verified tariff and workload; this is not a quote."
+    }
+  ]
+}

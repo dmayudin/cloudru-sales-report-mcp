@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh Cloud.ru sales every day at 06:00 Moscow
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 Europe/Moscow
+Persistent=true
+RandomizedDelaySec=60
+Unit=cloudru-sales-refresh.service
+
+[Install]
+WantedBy=timers.target
