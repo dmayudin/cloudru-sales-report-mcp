@@ -19,6 +19,7 @@ PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=strict
 ReadWritePaths=/var/lib/cloudru-sales
+ReadWritePaths=-/srv/cloudru-sales-report
 TimeoutStopSec=30
 
 [Install]

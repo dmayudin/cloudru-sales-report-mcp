@@ -33,4 +33,5 @@ def fetch(svc):
     # No modifications until validation passed. Content-addressed import retains history.
     svc.store.put(data)
     result=svc.ch.import_rows(sid,rows)
+    if hasattr(svc,'after_import'): result=svc.after_import(sid,result)
     return {'snapshot_id':sid,'source':'configured_private_s3_object','totals':summary(rows),'import':result}

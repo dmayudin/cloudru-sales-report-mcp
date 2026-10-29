@@ -16,4 +16,5 @@ PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=yes
 UMask=0077
+ReadWritePaths=-/srv/cloudru-sales-report
 TimeoutStartSec=300

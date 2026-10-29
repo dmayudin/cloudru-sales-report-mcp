@@ -10,7 +10,7 @@ INCLUDE=('cloudru_mcp','deploy','skills','scripts','requirements.lock','pyprojec
 
 
 def build(output=None):
-    output=output or ROOT/'dist'/'cloudru-sales-report-mcp-0.3.2.zip'
+    output=output or ROOT/'dist'/'cloudru-sales-report-mcp-0.4.0.zip'
     output.parent.mkdir(parents=True,exist_ok=True)
     entries={}
     for name in INCLUDE:

@@ -42,7 +42,17 @@ class Services:
 
     def ingest(self, sid):
         self.s.require_write()
-        return self.ch.import_rows(sid, parse(self.store.read(sid)))
+        return self.after_import(sid, self.ch.import_rows(sid, parse(self.store.read(sid))))
+
+    def after_import(self, sid, result):
+        if os.environ.get('CLOUDRU_DASHBOARD_DIR'):
+            # The automatic dashboard follows every reconciled import; a page failure never undoes the import.
+            from .dashboard import publish
+            try:
+                result['dashboard'] = publish(self.ch, sid)
+            except SafeError as e:
+                result['dashboard'] = {'published': False, 'error': str(e)}
+        return result
 
 
 def make_server(services=None, remote=False):
@@ -242,6 +252,15 @@ def make_server(services=None, remote=False):
                      limit: Annotated[int, Field(ge=1, le=100)] = 20) -> dict[str, Any]:
         """Read exact totals and top groups for one committed snapshot. Contribution = net_revenue-net_cogs-fees. Signed returns must already reduce revenue and recovered cost. margin_pct is null at zero revenue. Truncation affects groups only, never totals."""
         return safe(svc.ch.report, snapshot_id, group_by, limit)
+
+    @mcp.tool(annotations=WRITE)
+    def sales_publish_dashboard(snapshot_id: Annotated[str, Field(pattern=r'^[a-f0-9]{64}$')]) -> dict[str, Any]:
+        """Render the HTML dashboard (KPIs, channels, categories, days, products) for one committed snapshot and publish it at the server's HTTPS dashboard URL. No browser and no Managed BI login needed. Same numbers as sales_report. Runs automatically after sales_import_snapshot when configured."""
+        def run():
+            svc.s.require_write()
+            from .dashboard import publish
+            return publish(svc.ch, snapshot_id)
+        return safe(run)
 
     @mcp.resource('sales://contract')
     def contract() -> str:

@@ -31,6 +31,8 @@
 | CLOUDRU_CH_DATABASE / CLOUDRU_CH_USER / CLOUDRU_CH_PASSWORD | БД и импортёр; пароль не передаётся в SQL/tool arguments |
 | CLOUDRU_CH_CA_FILE | Доверенная CA при необходимости; не отключать TLS verification |
 | CLOUDRU_BI_CA_FILE | CA для Managed BI (частная цепочка Cloud.ru); по умолчанию берётся CLOUDRU_CH_CA_FILE |
+| CLOUDRU_DASHBOARD_DIR | каталог, куда сервер атомарно пишет `index.html` дашборда (на VM `/srv/cloudru-sales-report`, отдаёт Caddy); без него автопубликация выключена |
+| CLOUDRU_DASHBOARD_URL | публичный адрес дашборда, возвращается в `dashboard_url` |
 | CLOUDRU_CH_ALLOW_PRIVATE_HTTP | `1` разрешает `http://` к ClickHouse только по литеральному частному IPv4 (10/8, 172.16/12, 192.168/16) внутри VPC; публичные адреса и имена остаются только HTTPS |
 | CLOUDRU_BI_CH_PASSWORD | Отдельный reader для BI |
 | CLOUDRU_BI_URL | Доверенный HTTPS origin Managed BI |

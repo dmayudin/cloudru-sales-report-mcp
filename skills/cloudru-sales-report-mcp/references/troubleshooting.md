@@ -26,6 +26,12 @@
 
 Причина 1: короткий адрес `cloudru/cloud` OpenTofu разворачивает в свой реестр, а зеркало Cloud.ru подключено для `registry.terraform.io/cloudru/cloud`. Шаблон теперь пишет полный адрес; в старом main.tf.json заменить `source` вручную. Причина 2: `.terraform.lock.hcl`, созданный на macOS, содержит хэш только для darwin. На VM удалить lock и выполнить `terraform init` (зеркало HTTPS Cloud.ru), затем `plan` → «No changes».
 
+## Managed BI: нельзя опубликовать дашборд без браузера
+
+Проверено 29.10.2026 на Evolution BI 1.10.3 (Superset 6.1.0): `AUTH_TYPE` OAuth, единственный провайдер «Cloud.ru»; `/login/Cloud.ru` ведёт на `id.cloud.ru/auth/system/openid/auth` (client `dp-evobi-<bi_id>`, PKCE), а он без браузерной сессии отправляет на `/login`. `/api/v1/*` с токеном IAM отвечает 422 «The specified alg value is not allowed», `/api/v1/security/login` (db) — 401. Публичная спецификация Managed BI (`openapi_v3.yaml`) покрывает только жизненный цикл инстанса; поле `connectionIds` есть, но API подключений Data Platform в публичной спецификации нет.
+
+Что делать: использовать автоматический дашборд сервера MCP (`sales_publish_dashboard`, `setup-dashboard.sh`). Managed BI — только ручной шаг E2 по желанию пользователя. Просьба к Cloud.ru: сервисный аккаунт/API-токен для Superset REST или API подключений и импорта дашбордов.
+
 ## Managed BI: «Create instance failed» (task status 20301) на бесплатном тарифе
 
 Симптом: Terraform `cloudru_evolution_bi_bi` падает, задача Data Platform завершается с кодом 20301 без деталей; ресурс остаётся tainted. Дважды на free tier flavor (2 vCPU / 4 ГБ).
