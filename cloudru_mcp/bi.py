@@ -11,7 +11,10 @@ from .config import SafeError
 class BI:
     def __init__(self,settings,client=None):
         self.s=settings
-        self.client=client or httpx.Client(timeout=30,follow_redirects=False,trust_env=False)
+        # Managed BI external/internal hosts present certificates issued by the private Cloud.ru CA chain
+        # (Cloud.ru Certificate Manager CA ← Cloud.ru External Root CA): verify against the operator-provided CA file.
+        ca=os.environ.get('CLOUDRU_BI_CA_FILE') or os.environ.get('CLOUDRU_CH_CA_FILE') or True
+        self.client=client or httpx.Client(timeout=30,follow_redirects=False,trust_env=False,verify=ca)
         self.base=os.environ.get('CLOUDRU_BI_URL','').rstrip('/')
         self.token=os.environ.get('CLOUDRU_BI_API_TOKEN','')
         self.uri=os.environ.get('CLOUDRU_BI_SQLALCHEMY_URI','')

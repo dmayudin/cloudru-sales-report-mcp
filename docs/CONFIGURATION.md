@@ -30,6 +30,7 @@
 | CLOUDRU_CH_URL | HTTPS origin, без path/query/credentials; provider hosts должны быть проверены |
 | CLOUDRU_CH_DATABASE / CLOUDRU_CH_USER / CLOUDRU_CH_PASSWORD | БД и импортёр; пароль не передаётся в SQL/tool arguments |
 | CLOUDRU_CH_CA_FILE | Доверенная CA при необходимости; не отключать TLS verification |
+| CLOUDRU_BI_CA_FILE | CA для Managed BI (частная цепочка Cloud.ru); по умолчанию берётся CLOUDRU_CH_CA_FILE |
 | CLOUDRU_BI_CH_PASSWORD | Отдельный reader для BI |
 | CLOUDRU_BI_URL | Доверенный HTTPS origin Managed BI |
 | CLOUDRU_BI_API_TOKEN | Поддерживаемый BI API token; совместимость проверяется live, IAM не подставляется автоматически |

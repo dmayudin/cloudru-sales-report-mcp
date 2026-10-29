@@ -20,6 +20,12 @@
 
 Что делать: с согласия пользователя переключить `bi_flavor_id` на платный флейвор (в пилоте `c5e918aa-8096-4840-9329-a90def1ac304`, 3,7881 ₽/ч с НДС по тарифу 7.EVO.18), в rendered main.tf.json убрать `lifecycle` у `cloudru_evolution_bi_bi`, сделать `plan -target=cloudru_evolution_bi_bi.sales` (ожидается replace tainted) и apply. Сохранённый plan устаревает после любого другого apply («Saved plan is stale») — планируй непосредственно перед apply. Создание занимает десятки минут; падение на free tier тоже включить в обращение в поддержку.
 
+## Managed BI: сертификат не доверенный, внутренний адрес не резолвится, API-вход закрыт
+
+- Внешний и внутренний адреса BI (`…dataplatform.cloud.ru`) используют цепочку «Cloud.ru Certificate Manager CA → Cloud.ru External Root CA». Браузеры и curl без этого корня отвечают ERR_CERT_AUTHORITY_INVALID / «unable to get local issuer certificate». Пользователь ставит корень по [инструкции Managed BI](https://cloud.ru/docs/managed-bi/ug/topics/guides__root-certificate); сервер MCP получает его через `CLOUDRU_BI_CA_FILE` (bi.py 0.3.1+) и `CLOUDRU_CH_CA_FILE`.
+- Внутренний адрес (`internal-evobi-…`) не резолвится из рабочей подсети VM даже через Evolution DNS. Для сервера используй внешний адрес (`CLOUDRU_BI_URL=https://external-evobi-…`) с CA-файлом; в manifest `bi_internal_host` тоже можно указать внешний.
+- Страница входа предлагает единственного провайдера «Cloud.ru» (OAuth); `POST /api/v1/security/login` с провайдером db отвечает 401 «Not authorized», `GET /api/v1/security/csrf_token/` без сессии — 401. Значит, headless-токена Superset без интерактивного входа нет: `sales_bi_probe` вернёт AUTH, публикацию дашборда делает пользователь в интерфейсе BI по готовой витрине (вход через Cloud.ru), а агент передаёт параметры подключения ClickHouse (хост:8443, база, пользователь sales_reader, secure=true). Браузерный fallback агента запрещён.
+
 ## Data Platform API отвечает 500 DP-ERR-X-000 / 403 для сервисного аккаунта
 
 Симптом: `https://dataplatform.api.cloud.ru/v1/clusters|bis|bis/flavors` с токеном сервисного аккаунта → 500 или 403 даже с ролями `dataplatform.admin`, `bi.admin`; с личным ключом пользователя те же запросы работают.
