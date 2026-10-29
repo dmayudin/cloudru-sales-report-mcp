@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cloudru-sales-mcp"
-version = "0.3.1"
+version = "0.3.2"
 description = "Scenario-scoped Cloud.ru Data Platform, S3 and ClickHouse MCP"
 requires-python = ">=3.12"
 dependencies = ["mcp>=1.20,<2", "httpx>=0.28,<1", "boto3>=1.40,<2"]

@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 
 NAME='cloudru-sales-report-mcp'
-VERSION='0.3.1'
+VERSION='0.3.2'
 RUNTIME=('cloudru_mcp','deploy','requirements.lock','pyproject.toml','README.md','INSTALL.md',
          'examples/sales-demo.csv','docs','prompts','scripts','skills','LICENSE','SECURITY.md')
 
