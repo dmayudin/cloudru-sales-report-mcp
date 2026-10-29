@@ -13,11 +13,34 @@ def config():
     return Deployment.model_validate_json(Path('deploy/deployment.example.json').read_text())
 
 
+def test_template_with_existing_service_account():
+    c=config().model_copy(update={'service_account_id':c_id})
+    t=template(c)
+    assert 'cloudru_evolution_iam_service_account' not in t['resource'] and 'cloudru_evolution_iam_permission' not in t['resource']
+    assert t['resource']['cloudru_evolution_cluster_cluster']['sales']['service_account_id']==str(c_id)
+    assert 'service_account_key_secret' not in t['output']
+
+
+from uuid import UUID
+c_id=UUID('00000000-0000-4000-8000-000000000002')
+
+
 def test_template_network_and_minimal_scope():
     r=template(config())['resource']
     assert r['cloudru_evolution_compute_subnet']['workload']['dns_servers']=={'value':['10.77.0.10']}
-    assert r['cloudru_evolution_clickhouse_cluster']['sales']['replicas']==0
-    assert r['cloudru_evolution_bi_bi']['sales']['enable_external_host'] is False
+    assert r['cloudru_evolution_clickhouse_cluster']['sales']['replicas']==1   # replicas_per_shard: 1 host
+    assert r['cloudru_evolution_bi_bi']['sales']['enable_external_host'] is True
+    # subnets carry CIDR, gateway, routed flag; data services live in the DNS subnet, the VM in the workload subnet
+    assert r['cloudru_evolution_compute_subnet']['sales']['subnet_address']=='10.77.0.0/24'
+    assert r['cloudru_evolution_compute_subnet']['sales']['routed_network'] is True
+    assert r['cloudru_evolution_clickhouse_cluster']['sales']['subnet_ids']==['${cloudru_evolution_compute_subnet.sales.id}']
+    assert r['cloudru_evolution_compute_interface']['sales']['subnet']=={'id':'${cloudru_evolution_compute_subnet.workload.id}'}
+    assert r['cloudru_evolution_compute_security_group_rule']['acme']['port_range']=='80:80'
+    assert 'image_metadata' not in r['cloudru_evolution_compute_vm']['sales']
+    # service_account_id null → service account, 7 product roles and an access key are created by the template
+    assert set(r['cloudru_evolution_iam_permission'])=={'eiv_admin','s3e_editor','dbaas_clickhouse_admin','dataplatform_admin','logaas_writer','vpc_admin','cdns_admin'}
+    assert r['cloudru_evolution_cluster_cluster']['sales']['service_account_id']=='${cloudru_evolution_iam_service_account.sales.id}'
+    assert r['cloudru_evolution_iam_access_key']['sales']['ttl']=='0'
     assert 'policy' not in r['cloudru_evolution_obs_bucket']['sales']
     assert all(v['lifecycle']['prevent_destroy'] for instances in r.values() for v in instances.values())
 

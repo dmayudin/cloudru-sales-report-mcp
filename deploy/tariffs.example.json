@@ -1,104 +1,105 @@
 {
-  "verified_at": "2026-10-28T00:00:00+03:00",
+  "verified_at": "2026-10-28T13:00:00+03:00",
   "items": [
     {
       "category": "clickhouse",
-      "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "unit": "hour",
+      "quantity": 1,
+      "rate_rub": 9.42,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/documents/tariffs/evolution/managed-clickhouse",
+      "assumption": "1 host 2 vCPU / 16 GB (combined, Single-AZ): 2 x 1.49145 + 16 x 0.4026 = 9.4245 RUB/h incl. VAT 22%, tariff 7.EVO.29 v260918 effective 2026-09-28. Storage billed in a separate line below."
+    },
+    {
+      "category": "storage",
+      "unit": "hour",
+      "quantity": 40,
+      "rate_rub": 0.016836,
+      "vat_included": true,
+      "source_url": "https://cloud.ru/documents/tariffs/evolution/managed-clickhouse",
+      "assumption": "ClickHouse network SSD 40 GB x 0.016836 RUB/GB-hour incl. VAT. Object Storage usage (few KB, <100 PUT/GET per day) stays inside the permanent free tier (15 GB, 100k PUT, 1M GET per month, cloud.ru/docs/evolution/overview/topics/free-tier__object-storage) and adds 0 RUB."
     },
     {
       "category": "bi",
-      "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "unit": "hour",
+      "quantity": 1,
+      "rate_rub": 0,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/docs/evolution/overview/topics/free-tier__managed-bi",
+      "assumption": "Managed BI 2 vCPU / 4 GB free tier: one instance per organization, indefinitely, balance must be positive. If the organization already uses its free instance, the standard price is 3.7881 RUB/h incl. VAT (tariff 7.EVO.18 v260918) = +2727.43 RUB per 30 days. Eligibility is checked after apply by the actual invoice line. The Data Platform cluster itself has no tariff item in the official Evolution tariff index (39 documents, 2026-10-14)."
     },
     {
       "category": "mcp_compute",
-      "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "unit": "hour",
+      "quantity": 1,
+      "rate_rub": 0.99023334,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/documents/tariffs/evolution/evolution-compute",
+      "assumption": "Evolution Compute VM, guaranteed vCPU share 10%, 2 vCPU / 4 GB RAM, tariff 7.EVO.1 v261014 effective 2026-10-14. Runs the MCP server, Terraform and TLS proxy. Billed while powered on."
     },
     {
       "category": "mcp_disk",
-      "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "unit": "hour",
+      "quantity": 20,
+      "rate_rub": 0.01586,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/documents/tariffs/evolution/evolution-compute",
+      "assumption": "Boot disk SSD NVMe 20 GB x 0.01586 RUB/GB-hour incl. VAT. Billed until the disk is deleted, even if the VM is off."
     },
     {
       "category": "network",
-      "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "unit": "hour",
+      "quantity": 1,
+      "rate_rub": 0.2178,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/documents/tariffs/evolution/evolution-compute",
+      "assumption": "Public IP address binding 0.2074 RUB/h incl. VAT plus conservative egress estimate ~2 GB per month at 0.00366 RUB/MB (~7.5 RUB) spread per hour (~0.0104 RUB/h). VPC, subnets and security groups have no tariff item."
     },
     {
       "category": "dns",
       "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "quantity": 1,
+      "rate_rub": 0,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
-    },
-    {
-      "category": "storage",
-      "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
-      "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/documents/tariffs/evolution/evolution-dns",
+      "assumption": "Tariff 7.EVO.12 v260918 bills only hosted zones (1.098 RUB/day each) and queries above 1 million per month. The scenario creates one DNS server resource and no zones; expected queries are far below 1 million, so 0 RUB."
     },
     {
       "category": "logs",
       "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "quantity": 1,
+      "rate_rub": 0,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/docs/client-log/ug/topics/overview__limitations",
+      "assumption": "Client Logging has no tariff document in the official Evolution tariff index (2026-10-14); the service provides 1 GB/day of log traffic and 3-day retention as an organization quota. ClickHouse and BI write to the existing 'default' log group; expected volume is far below the quota, so 0 RUB."
     },
     {
       "category": "tls_domain",
       "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "quantity": 1,
+      "rate_rub": 0,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://sslip.io/",
+      "assumption": "MCP hostname <ip>.sslip.io (public wildcard DNS, free) with a Let's Encrypt certificate issued automatically by Caddy (free). No domain purchase."
     },
     {
       "category": "source_connector",
       "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "quantity": 1,
+      "rate_rub": 0,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://cloud.ru/documents/tariffs/evolution/object-storage",
+      "assumption": "One-off report: a single synthetic CSV staged through MCP; no scheduled source, no connector, no timer. 0 RUB."
     },
     {
       "category": "agent_usage",
       "unit": "month",
-      "quantity": null,
-      "rate_rub": null,
+      "quantity": 1,
+      "rate_rub": 0,
       "vat_included": true,
-      "source_url": "https://cloud.ru/documents/tariffs/index.html",
-      "assumption": "Fill from verified tariff and workload; this is not a quote."
+      "source_url": "https://claude.com/pricing",
+      "assumption": "Claude Code runs under the user's existing paid subscription; no additional per-report charge from the operator. 0 RUB additional."
     }
-  ]
+  ],
+  "note": "Реальные тарифы, проверенные 28.10.2026 для пилота (с НДС 22%). Перед использованием проверь дату: старше 7 дней — пересчитать. Запасной вариант BI (если free tier занят/не создаётся): 3.7881 RUB/h по тарифу 7.EVO.18 — замени rate_rub в категории bi. ClickHouse 4 vCPU/16 GB: 4 x 1.49145 + 16 x 0.4026 = 12.4074 RUB/h."
 }

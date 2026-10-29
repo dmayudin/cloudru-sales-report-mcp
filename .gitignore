@@ -19,3 +19,8 @@ runtime.env
 bound.env
 *.pem
 *.key
+bootstrap-connection*.json
+client-token.local
+*.tgz
+.DS_Store
+bootstrap-secrets.json

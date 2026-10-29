@@ -11,7 +11,9 @@ import base64
 import httpx
 
 ROOT=Path(__file__).resolve().parents[1]
-MARKER=ROOT/'bootstrap-connection.json'
+# Optional label → separate marker (e.g. a second key for another project): connect_cloud.py user2
+LABEL=''.join(ch for ch in (sys.argv[1] if len(sys.argv)>1 else '') if ch.isalnum() or ch in '-_')[:20]
+MARKER=ROOT/('bootstrap-connection'+('-'+LABEL if LABEL else '')+'.json')
 
 
 def private_write(path,value):
@@ -26,7 +28,7 @@ def main():
     if MARKER.exists():
         print('Подключение уже подготовлено. Сообщите агенту: подключение существует. Повторный ввод не нужен.')
         return 2
-    print('Подключение Cloud.ru для тестового отчёта. Облачные ресурсы не создаются.')
+    print('Подключение Cloud.ru для отчёта по продажам: личный ключ доступа (Мой профиль → Ключи доступа). Облачные ресурсы не создаются.')
     print('Ключ передаётся только в IAM Cloud.ru по HTTPS. Ввод не отображается.')
     print('После успешной проверки ключ временно сохранится на этом компьютере в файле, доступном только вашему пользователю, для дальнейших API-запросов агента.')
     try:

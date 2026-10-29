@@ -1,6 +1,7 @@
 {
   "project_id": "00000000-0000-4000-8000-000000000001",
-  "service_account_id": "00000000-0000-4000-8000-000000000002",
+  "service_account_id": null,
+  "service_account_key_ttl": "0",
   "zone_id": "00000000-0000-4000-8000-000000000003",
   "bi_flavor_id": "00000000-0000-4000-8000-000000000004",
   "ch_specification_id": "00000000-0000-4000-8000-000000000005",
@@ -11,7 +12,7 @@
   "ch_version": "25.8",
   "storage_gib": 40,
   "network_cidr": "10.77.0.0/16",
-  "bi_external": false,
+  "bi_external": true,
   "runtime_image_id": "00000000-0000-4000-8000-000000000008",
   "runtime_flavor_id": "00000000-0000-4000-8000-000000000009",
   "runtime_disk_type_id": "00000000-0000-4000-8000-000000000010",

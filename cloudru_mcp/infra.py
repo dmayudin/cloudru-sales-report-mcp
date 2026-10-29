@@ -11,29 +11,40 @@ from pathlib import Path
 import subprocess
 import threading
 import time
-from uuid import uuid4
-from pydantic import BaseModel, ConfigDict, Field, UUID4
+from uuid import uuid4, UUID
+from pydantic import BaseModel, ConfigDict, Field
 from .config import SafeError
 
 
+# Service account product roles required by the scenario (verified 2026-10-28 on a real project).
+SERVICE_ACCOUNT_ROLES = ('eiv.admin', 's3e.editor', 'dbaas.clickhouse.admin', 'dataplatform.admin',
+                         'logaas.writer', 'vpc.admin', 'cdns.admin')
+
+
 class Deployment(BaseModel):
+    """Server-side deployment configuration. Cloud.ru returns RFC 4122 UUIDs of several versions
+    (ClickHouse specifications are UUIDv7), so any UUID is accepted."""
     model_config = ConfigDict(extra='forbid')
-    project_id: UUID4
-    service_account_id: UUID4
-    zone_id: UUID4
-    bi_flavor_id: UUID4
-    ch_specification_id: UUID4
-    log_group_id: UUID4
-    tenant_id: UUID4
+    project_id: UUID
+    # None → the template creates a project-level service account, grants SERVICE_ACCOUNT_ROLES and issues
+    # an access key for it, so the user never visits the IAM console. The bootstrap key (personal access key)
+    # must be able to manage IAM in the project.
+    service_account_id: UUID | None = None
+    service_account_key_ttl: str = Field(default='0', pattern=r'^(0|\d+[smh])$')  # 0 = no expiry (Cloud.ru IAM)
+    zone_id: UUID
+    bi_flavor_id: UUID
+    ch_specification_id: UUID
+    log_group_id: UUID
+    tenant_id: UUID
     name: str = Field(pattern=r'^[a-z][a-z0-9-]{2,30}$')
     bucket: str = Field(pattern=r'^[a-z][a-z0-9-]{2,60}$')
     ch_version: str = Field(pattern=r'^\d{2}\.\d{1,2}$')
     storage_gib: int = Field(default=40, ge=40, le=100)
     network_cidr: str = '10.77.0.0/16'
     bi_external: bool = False
-    runtime_image_id: UUID4
-    runtime_flavor_id: UUID4
-    runtime_disk_type_id: UUID4
+    runtime_image_id: UUID
+    runtime_flavor_id: UUID
+    runtime_disk_type_id: UUID
     admin_cidr: str
     client_cidr: str
     ssh_public_key: str = Field(pattern=r'^ssh-ed25519 [A-Za-z0-9+/=]+(?: .*)?$')
@@ -51,22 +62,38 @@ def template(c: Deployment):
     def add(kind, values):
         r['cloudru_evolution_' + kind] = {'sales': values}
     add('vpc_vpc', dict(name=c.name, project_id=project))
+    # Cloud.ru rejects a bare network address (422): pass the CIDR, the gateway and the routed flag.
+    # The DNS server lives in this subnet; Data Platform requires its subnet to contain a matching DNS server,
+    # so ClickHouse, Data Platform and Managed BI are placed here as well.
     add('compute_subnet', dict(name=c.name+'-dns', project_id=project, zone={'id':str(c.zone_id)},
-        vpc_id=ref('cloudru_evolution_vpc_vpc'), subnet_address=str(a.network_address), prefix_length=24))
+        vpc_id=ref('cloudru_evolution_vpc_vpc'), subnet_address=str(a), default_gateway=str(a.network_address+1),
+        routed_network=True, dns_servers={'value':[dns]}))
     add('dns_dns_server', dict(name=c.name, availability_zone_id=str(c.zone_id),
         vpc_id=ref('cloudru_evolution_vpc_vpc'), subnet_id=ref('cloudru_evolution_compute_subnet'), ip_address=dns))
     r['cloudru_evolution_compute_subnet']['workload'] = dict(name=c.name+'-data', project_id=project,
         zone={'id':str(c.zone_id)}, vpc_id=ref('cloudru_evolution_vpc_vpc'),
-        subnet_address=str(b.network_address), prefix_length=24, dns_servers={'value':[dns]},
+        subnet_address=str(b), default_gateway=str(b.network_address+1), routed_network=True, dns_servers={'value':[dns]},
         depends_on=['cloudru_evolution_dns_dns_server.sales'])
-    subnet='${cloudru_evolution_compute_subnet.workload.id}'
-    add('cluster_cluster', dict(name=c.name, project_id=project, service_account_id=str(c.service_account_id),
-        network_configuration={'vpc_id':ref('cloudru_evolution_vpc_vpc'),'subnet_id':subnet,'zone_ids':[str(c.zone_id)]}))
+    subnet=ref('cloudru_evolution_compute_subnet')                 # data services
+    vm_subnet='${cloudru_evolution_compute_subnet.workload.id}'    # MCP runtime VM
+    if c.service_account_id is None:
+        add('iam_service_account', dict(name=c.name, target={'project_id':project}))  # description is read-only
+        sa=ref('cloudru_evolution_iam_service_account')
+        r['cloudru_evolution_iam_permission']={role.replace('.','_'):dict(resource_id=project, subject_id=sa,
+            role_identifier={'role_name':role}) for role in SERVICE_ACCOUNT_ROLES}
+        add('iam_access_key', dict(service_account_id=sa, ttl=c.service_account_key_ttl,
+            depends_on=['cloudru_evolution_iam_permission.'+role.replace('.','_') for role in SERVICE_ACCOUNT_ROLES]))
+    else:
+        sa=str(c.service_account_id)
+    add('cluster_cluster', dict(name=c.name, project_id=project, service_account_id=sa,
+        network_configuration={'vpc_id':ref('cloudru_evolution_vpc_vpc'),'subnet_id':subnet,'zone_ids':[str(c.zone_id)]},
+        depends_on=['cloudru_evolution_dns_dns_server.sales']))
     add('bi_bi', dict(name=c.name, project_id=project, cluster_id=ref('cloudru_evolution_cluster_cluster'),
         flavor_id=str(c.bi_flavor_id), subnet_id=subnet, zone_id=str(c.zone_id),
         log_group_id=str(c.log_group_id), load_examples=False, enable_external_host=c.bi_external))
     add('clickhouse_cluster', dict(name=c.name, project_id=project, version=c.ch_version,
-        specification_id=str(c.ch_specification_id), shards=1, replicas=0, storage_gib=c.storage_gib,
+        # Provider attribute `replicas` is sent as replicas_per_shard (1..3) = hosts per shard, despite its description.
+        specification_id=str(c.ch_specification_id), shards=1, replicas=1, storage_gib=c.storage_gib,
         subnet_ids=[subnet], logging={'enabled':True,'log_group_id':str(c.log_group_id)}))
     add('clickhouse_database', dict(name='sales_report', cluster_id=ref('cloudru_evolution_clickhouse_cluster')))
     add('clickhouse_user', dict(name='sales_importer', password='${var.importer_password}',
@@ -82,19 +109,22 @@ def template(c: Deployment):
     r['cloudru_evolution_compute_security_group_rule']={}
     for key,direction,protocol,port,cidr in [
         ('ssh','INGRESS','TCP','22:22',c.admin_cidr),('https','INGRESS','TCP','443:443',c.client_cidr),
+        # Let's Encrypt HTTP-01 validation needs 80/tcp from anywhere; Caddy only answers ACME there and redirects the rest.
+        ('acme','INGRESS','TCP','80:80','0.0.0.0/0'),
         ('egress','EGRESS','ANY','any','0.0.0.0/0')]:
         r['cloudru_evolution_compute_security_group_rule'][key]=dict(
             security_group_id=ref('cloudru_evolution_compute_security_group'),
             direction='TRAFFIC_DIRECTION_'+direction,ether_type='ETHER_TYPE_IPV4',
             ip_protocol='IP_PROTOCOL_'+protocol,port_range=port,remote_ip_prefix=cidr)
     add('compute_interface',dict(name=c.name+'-mcp',project_id=project,zone={'id':str(c.zone_id)},
-        subnet={'id':subnet},security_groups=[{'id':ref('cloudru_evolution_compute_security_group')}],
+        subnet={'id':vm_subnet},security_groups=[{'id':ref('cloudru_evolution_compute_security_group')}],
         interface_security_enabled=True,type='INTERFACE_TYPE_REGULAR'))
     add('compute_external_ip',dict(name=c.name+'-mcp',project_id=project,zone={'id':str(c.zone_id)},
         network_interface={'id':ref('cloudru_evolution_compute_interface')}))
     add('compute_disk',dict(name=c.name+'-mcp',project_id=project,zone={'id':str(c.zone_id)},
         size=20,disk_type={'id':str(c.runtime_disk_type_id)},image={'id':str(c.runtime_image_id)},bootable=True))
-    userdata='#cloud-config\n'+json.dumps({'users':[{'name':'deploy','groups':['sudo'],'shell':'/bin/bash',
+    # Cloud.ru accepts either cloud_init or image_metadata, not both; image_metadata gave no SSH login on Ubuntu 24.04.
+    userdata='#cloud-config\n'+json.dumps({'hostname':c.name+'-mcp','users':[{'name':'deploy','groups':['sudo'],'shell':'/bin/bash',
         'sudo':'ALL=(ALL) NOPASSWD:ALL','lock_passwd':True,'ssh_authorized_keys':[c.ssh_public_key]}],
         'ssh_pwauth':False,'disable_root':True})
     add('compute_vm',dict(name=c.name+'-mcp',project_id=project,zone={'id':str(c.zone_id)},
@@ -120,7 +150,10 @@ def template(c: Deployment):
             'runtime_vm_id':{'value':ref('cloudru_evolution_compute_vm')},
             'runtime_public_ip':{'value':'${cloudru_evolution_compute_external_ip.sales.ip_address}'},
             'subnet_id':{'value':subnet}, 'vpc_id':{'value':ref('cloudru_evolution_vpc_vpc')},
-            'bucket':{'value':c.bucket}}}
+            'bucket':{'value':c.bucket}, 'service_account_id':{'value':sa},
+            **({'service_account_key_id':{'value':'${cloudru_evolution_iam_access_key.sales.key_id}','sensitive':True},
+                'service_account_key_secret':{'value':'${cloudru_evolution_iam_access_key.sales.secret}','sensitive':True}}
+               if c.service_account_id is None else {})}}
 
 
 def summarize(plan):

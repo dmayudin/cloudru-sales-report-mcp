@@ -1,5 +1,7 @@
-mcp.example.com {
-    # Replace with the cloud MCP hostname. Bind the Python process only to loopback.
+# Public MCP hostname: <public-ip-with-dashes>.sslip.io when the customer has no domain.
+# Let's Encrypt HTTP-01 needs 80/tcp reachable from the internet (template rule "acme");
+# Caddy answers ACME there and redirects everything else to HTTPS. The Python process binds loopback only.
+203-0-113-10.sslip.io {
     request_body {
         max_size 6MB
     }

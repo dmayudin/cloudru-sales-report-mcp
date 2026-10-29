@@ -10,7 +10,7 @@ INCLUDE=('cloudru_mcp','deploy','skills','scripts','requirements.lock','pyprojec
 
 
 def build(output=None):
-    output=output or ROOT/'dist'/'cloudru-sales-report-mcp-0.2.0.zip'
+    output=output or ROOT/'dist'/'cloudru-sales-report-mcp-0.3.0.zip'
     output.parent.mkdir(parents=True,exist_ok=True)
     entries={}
     for name in INCLUDE:
@@ -20,9 +20,10 @@ def build(output=None):
             if f.is_symlink(): raise ValueError('Release cannot contain symlinks')
             if not f.is_file() or '__pycache__' in f.parts or f.name=='.DS_Store': continue
             rel=f.relative_to(ROOT)
-            if rel.parts[0] in ('cloudru_mcp','scripts') and f.suffix!='.py' and f.name!='terraform.rc': continue
+            if rel.parts[0]=='cloudru_mcp' and f.suffix!='.py' and f.name!='terraform.rc': continue
+            if rel.parts[0]=='scripts' and f.suffix not in ('.py','.sh','.template'): continue
             if rel.parts[0]=='deploy' and not (f.name.endswith(('.example','.example.json','.service','.timer')) or f.name in ('install-on-cloud.sh','terraform.rc')): continue
-            if rel.parts[0]=='skills' and f.suffix!='.md': continue
+            if rel.parts[0]=='skills' and f.suffix not in ('.md','.png'): continue
             entries[str(f.relative_to(ROOT))]=f.read_bytes()
     manifest={name:hashlib.sha256(data).hexdigest() for name,data in sorted(entries.items())}
     with ZipFile(output,'w',ZIP_DEFLATED) as z:

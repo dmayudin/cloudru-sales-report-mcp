@@ -26,6 +26,8 @@ def main():
         if path.name in {'credentials.json', '.env', 'secrets.env', 'client-token',
                          'bootstrap-connection.json', 'installation.json'} or '.tfstate' in path.name:
             errors.append(f"Private runtime file: {rel}")
+        if path.suffix in {'.png', '.jpg', '.jpeg', '.gif', '.zip'}:
+            continue  # binary assets (screenshots): no text checks
         text = path.read_text(encoding='utf-8')
         if re.search(r'(?:gh[pousr]_[A-Za-z0-9]{30,}|AKIA[A-Z0-9]{16}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)', text):
             errors.append(f"Possible secret: {rel}")
