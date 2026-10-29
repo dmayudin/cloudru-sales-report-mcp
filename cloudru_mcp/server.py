@@ -128,9 +128,14 @@ def make_server(services=None, remote=False):
             svc.s.allowed_ch_clusters=(uuid(d['clickhouse_id']),)
             hosts=d.get('clickhouse_hosts',[])
             import re
-            if not hosts or not re.fullmatch(r'[a-zA-Z0-9.-]+',hosts[0]):
-                raise SafeError('CONTRACT: expected ClickHouse hostname in manifest')
-            svc.s.clickhouse_url='https://'+hosts[0]+':8443'
+            from .config import private_ip
+            # Managed ClickHouse reports either a DNS name (TLS on 8443) or "ip:8123" (plain HTTP, VPC only).
+            m=re.fullmatch(r'([a-zA-Z0-9.-]+)(?::(\d{1,5}))?',hosts[0]) if hosts else None
+            if not m:
+                raise SafeError('CONTRACT: expected ClickHouse host in manifest')
+            ch_host=m.group(1)
+            plain=svc.s.allow_private_http and private_ip(ch_host) and m.group(2) in (None,'8123')
+            svc.s.clickhouse_url=f'http://{ch_host}:8123' if plain else f'https://{ch_host}:8443'
             svc.s.clickhouse_user='sales_importer'
             svc.s.database='sales_report'
             svc.s.bucket=d['bucket']
@@ -143,7 +148,8 @@ def make_server(services=None, remote=False):
                 raise SafeError('CONTRACT: BI manifest must contain a trusted HTTPS origin')
             reader=os.environ.get('CLOUDRU_BI_CH_PASSWORD','')
             if reader:
-                svc.bi.uri=f'clickhousedb://sales_reader:{quote(reader,safe="")}@{hosts[0]}:8443/sales_report?secure=true'
+                port,secure=('8123','false') if plain else ('8443','true')
+                svc.bi.uri=f'clickhousedb://sales_reader:{quote(reader,safe="")}@{ch_host}:{port}/sales_report?secure={secure}'
             values={'CLOUDRU_DP_CLUSTER_IDS':svc.s.allowed_dp_clusters[0],
                 'CLOUDRU_BI_IDS':svc.s.allowed_bis[0], 'CLOUDRU_CH_CLUSTER_IDS':svc.s.allowed_ch_clusters[0],
                 'CLOUDRU_CH_URL':svc.s.clickhouse_url,'CLOUDRU_CH_USER':'sales_importer',

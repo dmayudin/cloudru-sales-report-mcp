@@ -70,3 +70,14 @@ def test_loopback_requires_opt_in():
         s.ch_endpoint()
     s.allow_loopback_http = True
     assert s.ch_endpoint() == s.clickhouse_url
+
+
+def test_private_vpc_http_requires_opt_in_and_private_ip():
+    s = Settings(clickhouse_url='http://10.77.0.112:8123')
+    with pytest.raises(SafeError):
+        s.ch_endpoint()
+    s.allow_private_http = True
+    assert s.ch_endpoint() == s.clickhouse_url
+    for url in ('http://8.8.8.8:8123', 'http://clickhouse.example.com:8123', 'http://169.254.1.1:8123'):
+        with pytest.raises(SafeError):
+            Settings(clickhouse_url=url, allow_private_http=True).ch_endpoint()

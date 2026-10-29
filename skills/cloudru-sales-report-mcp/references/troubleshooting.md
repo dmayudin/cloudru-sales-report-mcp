@@ -13,6 +13,18 @@
 4. Отвязать кластер от Terraform (`terraform state rm` для cluster/database/users, предварительно скопировав state), чтобы следующий plan не упирался в него.
 5. Подготовить обращение по шаблону ниже и попросить пользователя отправить его (см. console-steps.md, шаг F). Если пользователь сотрудник Cloud.ru, предложить внутреннюю эскалацию команде Managed ClickHouse.
 6. Пока кластера нет, не обещать срок; остальной pipeline (VM, MCP, BI) можно довести до готовности.
+7. «Зависший» кластер может всё-таки завершиться: в пилоте кластер 25.8, созданный 28.10 в 12:26 UTC, перешёл в READY/HEALTHY 29.10 в 13:09 UTC (около 25 часов), с уже созданными базой и пользователями. Перед созданием нового кластера и при каждом возвращении к задаче проверяй `GET /v1/clusters?project_id=…` по всем кластерам проекта.
+8. Если ожил кластер, ранее отвязанный от Terraform: вернуть его записи из резервной копии state командой `terraform state mv -state=<backup> -state-out=terraform.tfstate <адрес> <адрес>` (cluster, database, оба user), предварительно убрав из state зависший кластер (`state rm`), вернуть в main.tf.json и deployment.json его `version`/`specification_id`, затем `plan` должен показать только изменение outputs.
+
+## Managed ClickHouse: доступен только HTTP 8123 внутри VPC
+
+Симптом: в `hosts` кластера адреса вида `10.77.0.112:8123` и `:9000`; порты 8443/9440 закрыты (connection refused), DNS-имени хоста нет (приватный DNS из подсети VM недоступен). Сервер MCP по умолчанию требует HTTPS.
+
+Что делать: в `runtime.env` поставить `CLOUDRU_CH_ALLOW_PRIVATE_HTTP=1`. Тогда `cloudru_use_deployed_resources` выбирает `http://<ip>:8123`, но только для литерального адреса из 10/8, 172.16/12, 192.168/16; публичные адреса и имена по-прежнему только через HTTPS. Трафик с паролем идёт открытым текстом внутри выделенной VPC: это нужно назвать пользователю. В BI подключение тоже без SSL: хост — IP, порт 8123.
+
+## OpenTofu на VM: «provider registry.opentofu.org/cloudru/cloud was not found» и ошибка checksum
+
+Причина 1: короткий адрес `cloudru/cloud` OpenTofu разворачивает в свой реестр, а зеркало Cloud.ru подключено для `registry.terraform.io/cloudru/cloud`. Шаблон теперь пишет полный адрес; в старом main.tf.json заменить `source` вручную. Причина 2: `.terraform.lock.hcl`, созданный на macOS, содержит хэш только для darwin. На VM удалить lock и выполнить `terraform init` (зеркало HTTPS Cloud.ru), затем `plan` → «No changes».
 
 ## Managed BI: «Create instance failed» (task status 20301) на бесплатном тарифе
 

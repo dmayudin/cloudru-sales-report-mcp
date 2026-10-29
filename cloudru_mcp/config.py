@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import os
 from pathlib import Path
+import ipaddress
 import re
 from urllib.parse import urlsplit
 from uuid import UUID
@@ -23,6 +24,15 @@ def uuid(value: str) -> str:
         raise SafeError("INPUT: expected UUID") from None
 
 
+def private_ip(host) -> bool:
+    """True only for a literal RFC 1918 address (VPC-internal Managed ClickHouse without TLS)."""
+    try:
+        ip = ipaddress.ip_address(host or "")
+    except ValueError:
+        return False
+    return ip.version == 4 and any(ip in ipaddress.ip_network(n) for n in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+
+
 @dataclass
 class Settings:
     project_id: str = ""
@@ -37,6 +47,7 @@ class Settings:
     clickhouse_password: str = field(default="", repr=False)
     clickhouse_ca: str = ""
     allow_loopback_http: bool = False
+    allow_private_http: bool = False
     allow_writes: bool = False
     key_id: str = field(default="", repr=False)
     key_secret: str = field(default="", repr=False)
@@ -61,6 +72,7 @@ class Settings:
             clickhouse_password=e.get("CLOUDRU_CH_PASSWORD", ""),
             clickhouse_ca=e.get("CLOUDRU_CH_CA_FILE", ""),
             allow_loopback_http=e.get("CLOUDRU_ALLOW_LOOPBACK_HTTP") == "1",
+            allow_private_http=e.get("CLOUDRU_CH_ALLOW_PRIVATE_HTTP") == "1",
             allow_writes=e.get("CLOUDRU_ALLOW_WRITES") == "1",
             key_id=e.get("CLOUDRU_KEY_ID", ""), key_secret=e.get("CLOUDRU_KEY_SECRET", ""),
             s3_access_key=e.get("CLOUDRU_S3_ACCESS_KEY", ""),
@@ -74,8 +86,10 @@ class Settings:
     def ch_endpoint(self):
         u = urlsplit(self.clickhouse_url)
         local = self.allow_loopback_http and u.hostname in ("localhost", "127.0.0.1", "::1")
-        if (u.scheme != "https" and not (u.scheme == "http" and local)) or not u.hostname:
-            raise SafeError("CONFIG: set CLOUDRU_CH_URL to HTTPS, or an explicitly enabled loopback tunnel")
+        private = self.allow_private_http and private_ip(u.hostname)
+        if (u.scheme != "https" and not (u.scheme == "http" and (local or private))) or not u.hostname:
+            raise SafeError("CONFIG: set CLOUDRU_CH_URL to HTTPS, an explicitly enabled loopback tunnel, "
+                            "or a private VPC IP with CLOUDRU_CH_ALLOW_PRIVATE_HTTP=1")
         if u.username or u.password or u.query or u.fragment or u.path not in ("", "/"):
             raise SafeError("CONFIG: ClickHouse URL must contain only scheme, host and port")
         return self.clickhouse_url

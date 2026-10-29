@@ -138,7 +138,7 @@ def template(c: Deployment):
         for v in instances.values():
             v['lifecycle']={'prevent_destroy':True}
     return {'terraform':{'required_version':'>= 1.6, < 2.0','required_providers':{
-        'cloudru':{'source':'cloudru/cloud','version':'2.1.5'}}},
+        'cloudru':{'source':'registry.terraform.io/cloudru/cloud','version':'2.1.5'}}},
         'provider':{'cloudru':{'project_id':project,'region':'ru-central-1','object_storage_tenant_id':str(c.tenant_id)}},
         'variable':{k:{'type':'string','sensitive':True} for k in ('importer_password','reader_password')},
         'resource':r, 'output':{
@@ -246,7 +246,7 @@ class Provisioner:
                    'ch_versions':'clickhouse_version_collection'}
             attrs={'zones':'zones','bi_flavors':'flavors','ch_versions':'versions'}
             data={'cloudru_evolution_'+v:{'list':({} if k=='ch_versions' else {'project_id':self.s.project_id})} for k,v in types.items()}
-            doc={'terraform':{'required_providers':{'cloudru':{'source':'cloudru/cloud','version':'2.1.5'}}},
+            doc={'terraform':{'required_providers':{'cloudru':{'source':'registry.terraform.io/cloudru/cloud','version':'2.1.5'}}},
                  'provider':{'cloudru':{'project_id':self.s.project_id,'region':'ru-central-1'}},'data':data,
                  'output':{k:{'value':'${data.cloudru_evolution_'+v+'.list.'+attrs[k]+'}'} for k,v in types.items()}}
             self._write(root/'main.tf.json',doc)
